@@ -1,0 +1,14 @@
+HASIL SHORTEST PATH
+
+Tujuan Node A
+Jarak Minimum : 0
+Rute          : A 
+--------------------------------
+Tujuan Node B
+Jarak Minimum : 10
+Rute          : A B 
+--------------------------------
+Tujuan Node C
+Jarak Minimum : 15
+Rute          : A C 
+--------------------------------

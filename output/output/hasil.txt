@@ -1,0 +1,42 @@
+HASIL SHORTEST PATH
+
+Tujuan Node A
+Jarak Minimum : 19
+Rute          : C B A 
+--------------------------------
+Tujuan Node B
+Jarak Minimum : 10
+Rute          : C B 
+--------------------------------
+Tujuan Node C
+Jarak Minimum : 0
+Rute          : C 
+--------------------------------
+Tujuan Node D
+Jarak Minimum : 17
+Rute          : C D 
+--------------------------------
+Tujuan Node E
+Jarak Minimum : 22
+Rute          : C D E 
+--------------------------------
+Tujuan Node F
+Jarak Minimum : 30
+Rute          : C D E F 
+--------------------------------
+Tujuan Node G
+Jarak Minimum : 48
+Rute          : C D E F G 
+--------------------------------
+Tujuan Node H
+Jarak Minimum : 60
+Rute          : C D E F G H 
+--------------------------------
+Tujuan Node I
+Jarak Minimum : 67
+Rute          : C D E F G H I 
+--------------------------------
+Tujuan Node J
+Jarak Minimum : INF
+Rute          : Tidak terjangkau
+--------------------------------

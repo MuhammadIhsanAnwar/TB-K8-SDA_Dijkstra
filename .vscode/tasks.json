@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build and Run Dijkstra Visualization",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "g++ -std=c++17 -Wall -Wextra -g3 \"${workspaceFolder}\\5. Struktur Data dan Algoritma\\TB-K1-SDA_Dijkstra\\main.cpp\" -o \"${workspaceFolder}\\5. Struktur Data dan Algoritma\\TB-K1-SDA_Dijkstra\\output\\TB-K1-SDA_Dijkstra.exe\" && \"${workspaceFolder}\\5. Struktur Data dan Algoritma\\TB-K1-SDA_Dijkstra\\output\\TB-K1-SDA_Dijkstra.exe\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}\\5. Struktur Data dan Algoritma\\TB-K1-SDA_Dijkstra"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
+    }
+  ]
+}
