@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <sstream>
 #include <cstdlib>
-#include <cstdlib>
+#include <cmath>
+#include <set>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ void printPath(vector<int>& parent, int node) {
 }
 
 // Write a simple HTML visualization (uses vis-network CDN) and open it.
-void writeVisualization(const vector<vector<Edge>>& graph, int V) {
+void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, int target, const vector<int>& path) {
         string outDir = "output";
         ostringstream ss_mkdir;
         ss_mkdir << "mkdir \"" << outDir << "\" >nul 2>&1";
@@ -36,12 +37,31 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
         ofstream viz(filename);
     if (!viz.is_open()) return;
 
+    int cols = max(2, (int)floor(sqrt(V)));
+    int rows = (V + cols - 1) / cols;
+    int spacing = 160;
+    vector<pair<int,int>> coords(V);
+    int xOffset = (cols - 1) * spacing / 2;
+    int yOffset = (rows - 1) * spacing / 2;
+    for (int i = 0; i < V; ++i) {
+        int row = i / cols;
+        int col = i % cols;
+        coords[i] = {col * spacing - xOffset, row * spacing - yOffset};
+    }
+
+    set<pair<int,int>> pathEdges;
+    for (size_t i = 1; i < path.size(); ++i) {
+        int u = min(path[i - 1], path[i]);
+        int v = max(path[i - 1], path[i]);
+        pathEdges.insert({u, v});
+    }
+
         viz << R"HTML(<!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Visualisasi Graph Dijkstra</title>
+    <title>Visualisasi Jaringan Dijkstra</title>
     <style>
         :root {
             color-scheme: dark;
@@ -201,20 +221,20 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
     <div class="shell">
         <section class="panel">
             <header class="hero">
-                <span class="badge">Dijkstra Path Visualization</span>
-                <h1>Visualisasi Graph Interaktif</h1>
-                <p class="subtitle">Tampilan dibuat lebih modern, edge memakai panah arah, dan animasi layout membantu struktur graph terlihat lebih hidup saat dibuka.</p>
+                <span class="badge">Visualisasi Rute Dijkstra</span>
+                <h1>Visualisasi Jaringan Lokasi Interaktif</h1>
+                <p class="subtitle">Antarmuka menampilkan lokasi dan ruas jalan dengan animasi, sehingga jalur terpendek dapat dilihat lebih jelas.</p>
                 <div class="legend">
-                    <span class="chip"><span class="dot blue"></span>Node graph</span>
-                    <span class="chip"><span class="dot gold"></span>Bobot edge</span>
-                    <span class="chip"><span class="dot pink"></span>Arah panah aktif</span>
+                    <span class="chip"><span class="dot blue"></span>Lokasi</span>
+                    <span class="chip"><span class="dot gold"></span>Bobot ruas jalan</span>
+                    <span class="chip"><span class="dot pink"></span>Rute terpendek aktif</span>
                 </div>
             </header>
             <div class="canvas-wrap">
                 <div id="mynetwork"></div>
             </div>
             <div class="footer">
-                <span><strong>Tip:</strong> geser atau zoom untuk eksplorasi graph.</span>
+                <span><strong>Tip:</strong> geser atau zoom untuk eksplorasi jaringan lokasi.</span>
                 <span>File ini dibuat otomatis setelah program dijalankan.</span>
             </div>
         </section>
@@ -224,7 +244,15 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
 )HTML";
 
     for (int i = 0; i < V; ++i) {
-        viz << "      { id: " << i << ", label: '" << char('A' + i) << "' }";
+        viz << "      { id: " << i << ", label: '" << char('A' + i) << "', x: " << coords[i].first << ", y: " << coords[i].second;
+        if (i == source) {
+            viz << ", color: { background: '#2ec4b6', border: '#0cf5a7' }";
+        } else if (i == target) {
+            viz << ", color: { background: '#ff4d6d', border: '#ffb3c1' }";
+        } else {
+            viz << ", color: { background: '#4cc9f0', border: '#ffffff' }";
+        }
+        viz << " }";
         if (i < V - 1) viz << ",\n";
         else viz << "\n";
     }
@@ -236,13 +264,23 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
         for (auto &e : graph[u]) {
             int v = e.to;
             if (u < v) {
-                                viz << "      { from: " << u << ", to: " << v << ", label: '" << e.weight << "', font: { align: 'middle' } }";
+                string edgeId = to_string(u) + "_" + to_string(v);
+                bool isPath = pathEdges.count({u, v}) > 0;
+                int edgeLength = 100 + e.weight * 30;
+                viz << "      { id: '" << edgeId << "', from: " << u << ", to: " << v << ", label: '" << e.weight << "', length: " << edgeLength << ", color: { color: '" << (isPath ? "#ffb703" : "rgba(138, 180, 255, 0.9)") << "' }, width: " << (isPath ? 5 : 3) << " }";
                 viz << ",\n";
             }
         }
     }
 
         viz << R"HTML(    ];
+
+        const routePath = [)HTML";
+    for (size_t i = 0; i < path.size(); ++i) {
+        viz << path[i];
+        if (i + 1 < path.size()) viz << ", ";
+    }
+    viz << R"HTML(];
 
         const container = document.getElementById('mynetwork');
         const data = {
@@ -259,8 +297,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
                 keyboard: true
             },
             layout: {
-                improvedLayout: true,
-                randomSeed: 7
+                improvedLayout: false
             },
             nodes: {
                 shape: 'dot',
@@ -272,14 +309,6 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
                     face: 'Segoe UI',
                     color: '#f7f9ff'
                 },
-                color: {
-                    background: '#4cc9f0',
-                    border: '#ffffff',
-                    highlight: {
-                        background: '#ffb703',
-                        border: '#ffffff'
-                    }
-                },
                 shadow: {
                     enabled: true,
                     color: 'rgba(0, 0, 0, 0.35)',
@@ -289,15 +318,12 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
                 }
             },
             edges: {
-                width: 3,
-                selectionWidth: 4,
                 smooth: {
                     enabled: true,
                     type: 'dynamic',
                     roundness: 0.35
                 },
                 color: {
-                    color: 'rgba(138, 180, 255, 0.9)',
                     highlight: '#ffd166',
                     hover: '#ffffff'
                 },
@@ -307,38 +333,80 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V) {
                     color: '#f8f9ff',
                     strokeWidth: 5,
                     strokeColor: 'rgba(5, 10, 20, 0.84)'
-                },
-                arrows: {
-                    to: {
-                        enabled: true,
-                        scaleFactor: 0.85
-                    },
-                    from: {
-                        enabled: true,
-                        scaleFactor: 0.7
-                    }
                 }
             },
             physics: {
                 enabled: true,
-                solver: 'barnesHut',
-                barnesHut: {
-                    gravitationalConstant: -9000,
-                    centralGravity: 0.2,
-                    springLength: 170,
-                    springConstant: 0.04,
-                    damping: 0.18
-                },
                 stabilization: {
-                    iterations: 220,
+                    iterations: 200,
                     fit: true
+                },
+                barnesHut: {
+                    gravitationalConstant: -8000,
+                    centralGravity: 0.15,
+                    springLength: 180,
+                    springConstant: 0.05,
+                    damping: 0.25
                 }
             }
         };
 
         const network = new vis.Network(container, data, options);
+
+        function formatEdgeId(u, v) {
+            return u < v ? `${u}_${v}` : `${v}_${u}`;
+        }
+
+        function animateRoute(positions) {
+            if (routePath.length === 0) return;
+            let step = 0;
+            const interval = 700;
+
+            data.nodes.add({
+                id: 'package',
+                label: '',
+                shape: 'dot',
+                size: 18,
+                color: { background: '#ffffff', border: '#ff4d6d' },
+                physics: false,
+                x: positions[routePath[0]].x,
+                y: positions[routePath[0]].y
+            });
+
+            const highlightNext = () => {
+                if (step >= routePath.length) return;
+
+                const nodeId = routePath[step];
+                data.nodes.update({
+                    id: nodeId,
+                    color: { background: '#ffb703', border: '#ffffff' }
+                });
+
+                data.nodes.update({
+                    id: 'package',
+                    x: positions[nodeId].x,
+                    y: positions[nodeId].y
+                });
+
+                if (step > 0) {
+                    const prevId = routePath[step - 1];
+                    const edgeId = formatEdgeId(prevId, nodeId);
+                    data.edges.update({
+                        id: edgeId,
+                        color: { color: '#ffb703' },
+                        width: 6
+                    });
+                }
+                step += 1;
+                setTimeout(highlightNext, interval);
+            };
+
+            highlightNext();
+        }
+
         network.once('stabilized', () => {
-            network.setOptions({ physics: false });
+            const positions = network.getPositions(routePath);
+            animateRoute(positions);
             network.fit({ animation: { duration: 900, easingFunction: 'easeInOutQuad' } });
         });
     </script>
@@ -363,38 +431,49 @@ int main() {
     cout << "SISTEM OPTIMASI PENGIRIMAN PAKET\n";
     cout << "ALGORITMA DIJKSTRA\n";
     cout << "=======================================\n\n";
-
-    cout << "Masukkan jumlah node: ";
+    cout << "Program mencari jalur terpendek dari lokasi awal ke tujuan pengiriman paket.\n";
+    cout << "Semua titik lokasi di peta akan diberi huruf: A, B, C, ...\n";
+    cout << "\n";
+    cout << "Masukkan jumlah titik lokasi di peta: ";
     cin >> V;
+    cout << "(Misal 4 berarti lokasi: A, B, C, D)\n\n";
 
     vector<vector<Edge>> graph(V);
 
-    cout << "Masukkan jumlah edge: ";
+    cout << "Masukkan jumlah ruas jalan yang menghubungkan lokasi: ";
     cin >> E;
 
-    cout << "\nInput data edge\n";
-    cout << "Format: asal tujuan bobot\n";
-    cout << "Contoh: A B 8\n\n";
-    cout << "Petunjuk: Gunakan huruf A.." << char('A' + V - 1) << " untuk node. Pastikan jumlah node cukup.\n";
+    cout << "\nMasukkan data ruas jalan antar lokasi\n";
+    cout << "Format setiap baris: asal tujuan bobot\n";
+    cout << "Contoh: A B 8  -> ruas jalan dari A ke B dengan bobot 8\n\n";
+    cout << "Gunakan huruf A.." << char('A' + V - 1) << " untuk semua lokasi.\n";
+    cout << "(Misal jika jumlah lokasi 5, gunakan A..E; jika jumlah lokasi 6, gunakan A..F.)\n";
+    cout << "Setiap baris berisi 3 nilai: lokasi asal, lokasi tujuan, dan bobot jarak.\n";
+    cout << "Contoh input ruas jalan: A B 8\n\n";
 
     for (int i = 0; i < E; i++) {
         char uChar, vChar;
         int w;
 
-        cout << "Edge ke-" << i + 1 << ": ";
-        cin >> uChar >> vChar >> w;
+        cout << "\nRuas jalan ke-" << i + 1 << ":\n";
+        cout << "Lokasi Asal: ";
+        cin >> uChar;
+        cout << "Lokasi Tujuan: ";
+        cin >> vChar;
+        cout << "Bobot Jarak: ";
+        cin >> w;
 
         int u = uChar - 'A';
         int v = vChar - 'A';
 
         if (u < 0 || u >= V || v < 0 || v >= V) {
-            cout << "Input node salah. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
-            --i; // repeat this edge input
+            cout << "Input lokasi salah. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+            --i; // ulang input ruas jalan ini
             continue;
         }
 
         if (w < 0) {
-            cout << "Bobot harus non-negatif. Masukkan ulang edge ini.\n";
+            cout << "Bobot harus non-negatif. Masukkan ulang ruas jalan ini.\n";
             --i;
             continue;
         }
@@ -404,13 +483,23 @@ int main() {
     }
 
     char sourceChar;
-    cout << "\nMasukkan node sumber: ";
+    cout << "\nMasukkan lokasi awal pengiriman (huruf): ";
     cin >> sourceChar;
 
     int source = sourceChar - 'A';
 
     if (source < 0 || source >= V) {
-        cout << "Node sumber tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+        cout << "Lokasi awal tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+        return 1;
+    }
+
+    char targetChar;
+    cout << "Masukkan lokasi tujuan pengiriman paket (huruf): ";
+    cin >> targetChar;
+
+    int target = targetChar - 'A';
+    if (target < 0 || target >= V) {
+        cout << "Lokasi tujuan tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
         return 1;
     }
 
@@ -443,6 +532,29 @@ int main() {
         }
     }
 
+    vector<int> deliveryPath;
+    if (dist[target] != INT_MAX) {
+        int temp = target;
+        while (temp != -1) {
+            deliveryPath.push_back(temp);
+            temp = parent[temp];
+        }
+        reverse(deliveryPath.begin(), deliveryPath.end());
+    }
+
+    cout << "\nRute optimal pengiriman paket dari " << char(source + 'A') << " ke " << char(target + 'A') << ":\n";
+    if (dist[target] == INT_MAX) {
+        cout << "Tidak ada rute pengiriman paket yang terjangkau.\n";
+    } else {
+        cout << "Jarak: " << dist[target] << "\n";
+        cout << "Rute: ";
+        for (size_t i = 0; i < deliveryPath.size(); ++i) {
+            cout << char(deliveryPath[i] + 'A');
+            if (i + 1 < deliveryPath.size()) cout << "->";
+        }
+        cout << "\n";
+    }
+
     ostringstream ss_mkdir2;
     ss_mkdir2 << "mkdir \"output\" >nul 2>&1";
     system(ss_mkdir2.str().c_str());
@@ -450,13 +562,13 @@ int main() {
     ofstream outputFile(outFile);
 
     cout << "\n=======================================\n";
-    cout << "HASIL SHORTEST PATH\n";
+    cout << "HASIL RUTE TERPENDEK\n";
     cout << "=======================================\n\n";
 
-    outputFile << "HASIL SHORTEST PATH\n\n";
+    outputFile << "HASIL RUTE TERPENDEK\n\n";
 
     // Print a neat table header
-    cout << "Node | Jarak Minimum | Rute\n";
+    cout << "Lokasi | Jarak Terpendek | Rute\n";
     cout << "--------------------------------" << string(20, '-') << "\n";
 
     for (int i = 0; i < V; i++) {
@@ -485,13 +597,13 @@ int main() {
         cout << "--------------------------------\n";
 
         // Also write to file
-        outputFile << "Tujuan Node " << char(i + 'A') << endl;
+        outputFile << "Tujuan Lokasi " << char(i + 'A') << endl;
         if (dist[i] == INT_MAX) {
-            outputFile << "Jarak Minimum : INF" << endl;
-            outputFile << "Rute          : Tidak terjangkau" << endl;
+            outputFile << "Jarak Terpendek : INF" << endl;
+            outputFile << "Rute            : Tidak terjangkau" << endl;
         } else {
-            outputFile << "Jarak Minimum : " << dist[i] << endl;
-            outputFile << "Rute          : ";
+            outputFile << "Jarak Terpendek : " << dist[i] << endl;
+            outputFile << "Rute            : ";
 
             vector<int> path;
             int temp = i;
@@ -513,9 +625,9 @@ int main() {
     outputFile.close();
 
     // Generate visualization and open
-    writeVisualization(graph, V);
+    writeVisualization(graph, V, source, target, deliveryPath);
 
-    cout << "\nData hasil juga disimpan ke file hasil.txt\n";
+    cout << "\nHasil perhitungan juga telah disimpan ke file hasil.txt\n";
 
     return 0;
 }
