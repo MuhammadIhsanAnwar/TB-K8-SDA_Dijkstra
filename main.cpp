@@ -18,53 +18,34 @@ struct Edge {
 
 typedef pair<int, int> pii;
 
-void printPath(vector<int>& parent, int node) {
-    if (node == -1)
-        return;
-
-    printPath(parent, parent[node]);
-    cout << char(node + 'A') << " ";
-}
-
-// Write a simple HTML visualization (uses vis-network CDN) and open it.
-void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, int target, const vector<int>& path) {
-        string outDir = "output";
-        ostringstream ss_mkdir;
-        ss_mkdir << "mkdir \"" << outDir << "\" >nul 2>&1";
-        string mkdirCmd = ss_mkdir.str();
-        system(mkdirCmd.c_str());
-        string filename = outDir + "\\visualization.html";
-        ofstream viz(filename);
+// Fungsi untuk menulis visualisasi HTML
+void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, 
+                        const vector<int>& dist, const vector<int>& parent) {
+    string outDir = "output";
+    system(("mkdir \"" + outDir + "\" >nul 2>&1").c_str());
+    string filename = outDir + "\\visualization.html";
+    ofstream viz(filename);
     if (!viz.is_open()) return;
 
+    // 1. Inisialisasi koordinat awal (grid rapi)
     int cols = max(2, (int)floor(sqrt(V)));
     int rows = (V + cols - 1) / cols;
     int spacing = 160;
-    vector<pair<int,int>> coords(V);
+    vector<pair<int, int>> coords(V);
     int xOffset = (cols - 1) * spacing / 2;
     int yOffset = (rows - 1) * spacing / 2;
     for (int i = 0; i < V; ++i) {
-        int row = i / cols;
-        int col = i % cols;
-        coords[i] = {col * spacing - xOffset, row * spacing - yOffset};
+        coords[i] = { (i % cols) * spacing - xOffset, (i / cols) * spacing - yOffset };
     }
 
-    set<pair<int,int>> pathEdges;
-    for (size_t i = 1; i < path.size(); ++i) {
-        int u = min(path[i - 1], path[i]);
-        int v = max(path[i - 1], path[i]);
-        pathEdges.insert({u, v});
-    }
-
-        viz << R"HTML(<!doctype html>
+    viz << R"HTML(<!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Visualisasi Jaringan Dijkstra</title>
+    <title>Visualisasi Rute Dijkstra</title>
     <style>
         :root {
-            color-scheme: dark;
             --bg-1: #07111f;
             --bg-2: #0d1b31;
             --panel: rgba(10, 18, 34, 0.76);
@@ -76,14 +57,16 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
             --accent-3: #f15bb5;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
             min-height: 100vh;
             font-family: "Segoe UI", Tahoma, Arial, sans-serif;
             color: var(--text);
-            background:
+            background: 
                 radial-gradient(circle at top left, rgba(100, 210, 255, 0.24), transparent 32%),
                 radial-gradient(circle at top right, rgba(241, 91, 181, 0.2), transparent 28%),
                 linear-gradient(160deg, var(--bg-1), var(--bg-2));
@@ -166,10 +149,6 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
         }
 
-        .dot.blue { background: var(--accent); }
-        .dot.gold { background: var(--accent-2); }
-        .dot.pink { background: var(--accent-3); }
-
         .canvas-wrap {
             padding: 18px;
         }
@@ -179,7 +158,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
             height: 680px;
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            background:
+            background: 
                 radial-gradient(circle at center, rgba(255, 255, 255, 0.04), transparent 55%),
                 linear-gradient(180deg, rgba(8, 15, 29, 0.92), rgba(11, 20, 40, 0.98));
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -203,6 +182,38 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
             font-weight: 600;
         }
 
+        .controls {
+            padding: 16px 28px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        select, button {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        #routeInfo {
+            padding: 0 28px 18px;
+            color: var(--muted);
+            font-size: 14px;
+            min-height: 24px;
+        }
+
         @keyframes fadeInUp {
             to {
                 opacity: 1;
@@ -211,76 +222,92 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
         }
 
         @keyframes floatBadge {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-3px); }
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
         }
     </style>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
     <div class="shell">
         <section class="panel">
             <header class="hero">
-                <span class="badge">Visualisasi Rute Dijkstra</span>
-                <h1>Visualisasi Jaringan Lokasi Interaktif</h1>
-                <p class="subtitle">Antarmuka menampilkan lokasi dan ruas jalan dengan animasi, sehingga jalur terpendek dapat dilihat lebih jelas.</p>
+                <span class="badge">Dijkstra Path Visualization</span>
+                <h1>Visualisasi Jaringan Interaktif</h1>
+                <p class="subtitle">Pilih tujuan untuk melihat rute terpendek, jarak, dan animasi pengiriman paket secara real-time.</p>
                 <div class="legend">
-                    <span class="chip"><span class="dot blue"></span>Lokasi</span>
-                    <span class="chip"><span class="dot gold"></span>Bobot ruas jalan</span>
-                    <span class="chip"><span class="dot pink"></span>Rute terpendek aktif</span>
+                    <span class="chip"><span class="dot" style="background:#2ec4b6"></span>Lokasi Awal</span>
+                    <span class="chip"><span class="dot" style="background:#ff4d6d"></span>Lokasi Tujuan</span>
+                    <span class="chip"><span class="dot" style="background:#ffb703"></span>Rute Aktif</span>
+                    <span class="chip"><span class="dot" style="background:#4cc9f0"></span>Lokasi</span>
                 </div>
             </header>
+            <div class="controls">
+                <label style="color:var(--muted)">Pilih Tujuan:</label>
+                <select id="destSelect">)HTML";
+
+    for (int i = 0; i < V; ++i) {
+        if (i == source) continue;
+        viz << "<option value=\"" << i << "\">" << char('A' + i) << "</option>";
+    }
+    viz << R"HTML(</select>
+                <button onclick="updateRoute()">🔍 Lihat Rute</button>
+            </div>
+            <div id="routeInfo"></div>
             <div class="canvas-wrap">
                 <div id="mynetwork"></div>
             </div>
             <div class="footer">
-                <span><strong>Tip:</strong> geser atau zoom untuk eksplorasi jaringan lokasi.</span>
-                <span>File ini dibuat otomatis setelah program dijalankan.</span>
+                <span><strong>Tip:</strong> geser/zoom untuk eksplorasi.</span>
+                <span>Auto-generated by C++ Dijkstra</span>
             </div>
         </section>
     </div>
     <script>
-        const nodes = [
-)HTML";
+        // Inject Data Dijkstra
+        const dijkstraDist = [)HTML";
+
+    for (int i = 0; i < V; ++i) 
+        viz << (dist[i] == INT_MAX ? -1 : dist[i]) << (i < V - 1 ? ", " : "");
+    viz << R"HTML(];
+        const dijkstraParent = [)HTML";
+
+    for (int i = 0; i < V; ++i) 
+        viz << parent[i] << (i < V - 1 ? ", " : "");
+    viz << R"HTML(];
+        const sourceNode = )HTML" << source << R"HTML(;
+
+        // Generate Nodes
+        const nodes = [)HTML";
 
     for (int i = 0; i < V; ++i) {
-        viz << "      { id: " << i << ", label: '" << char('A' + i) << "', x: " << coords[i].first << ", y: " << coords[i].second;
-        if (i == source) {
-            viz << ", color: { background: '#2ec4b6', border: '#0cf5a7' }";
-        } else if (i == target) {
-            viz << ", color: { background: '#ff4d6d', border: '#ffb3c1' }";
-        } else {
-            viz << ", color: { background: '#4cc9f0', border: '#ffffff' }";
-        }
-        viz << " }";
-        if (i < V - 1) viz << ",\n";
-        else viz << "\n";
+        string col = (i == source ? "#2ec4b6" : "#4cc9f0");
+        viz << "            { id:" << i << ", label:'" << char('A' + i) << "', x:" << coords[i].first 
+            << ", y:" << coords[i].second << ", color:{background:'" << col 
+            << "', border:'#ffffff'}, title:'Jarak dari sumber: " 
+            << (dist[i] == INT_MAX ? "∞ (tidak terjangkau)" : to_string(dist[i])) + "' }";
+        if (i < V - 1) viz << ",";
+        viz << "\n";
     }
+    viz << R"HTML(        ];
 
-    viz << "    ];\n\n    const edges = [\n";
+        // Generate Edges
+        const edges = [)HTML";
 
-    // To avoid duplicate edges (graph stored undirected as two entries), only add where u < v
     for (int u = 0; u < V; ++u) {
         for (auto &e : graph[u]) {
             int v = e.to;
             if (u < v) {
-                string edgeId = to_string(u) + "_" + to_string(v);
-                bool isPath = pathEdges.count({u, v}) > 0;
-                int edgeLength = 100 + e.weight * 30;
-                viz << "      { id: '" << edgeId << "', from: " << u << ", to: " << v << ", label: '" << e.weight << "', length: " << edgeLength << ", color: { color: '" << (isPath ? "#ffb703" : "rgba(138, 180, 255, 0.9)") << "' }, width: " << (isPath ? 5 : 3) << " }";
-                viz << ",\n";
+                viz << "            { id:'" << u << "_" << v << "', from:" << u 
+                    << ", to:" << v << ", label:'" << e.weight << "', width:3 },";
             }
         }
     }
-
-        viz << R"HTML(    ];
-
-        const routePath = [)HTML";
-    for (size_t i = 0; i < path.size(); ++i) {
-        viz << path[i];
-        if (i + 1 < path.size()) viz << ", ";
-    }
-    viz << R"HTML(];
+    viz << R"HTML(        ];
 
         const container = document.getElementById('mynetwork');
         const data = {
@@ -303,7 +330,6 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
                 shape: 'dot',
                 size: 28,
                 borderWidth: 3,
-                borderWidthSelected: 5,
                 font: {
                     size: 22,
                     face: 'Segoe UI',
@@ -312,9 +338,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
                 shadow: {
                     enabled: true,
                     color: 'rgba(0, 0, 0, 0.35)',
-                    size: 18,
-                    x: 0,
-                    y: 6
+                    size: 18
                 }
             },
             edges: {
@@ -324,6 +348,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
                     roundness: 0.35
                 },
                 color: {
+                    color: 'rgba(138, 180, 255, 0.9)',
                     highlight: '#ffd166',
                     hover: '#ffffff'
                 },
@@ -338,7 +363,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
             physics: {
                 enabled: true,
                 stabilization: {
-                    iterations: 200,
+                    iterations: 180,
                     fit: true
                 },
                 barnesHut: {
@@ -352,76 +377,99 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
         };
 
         const network = new vis.Network(container, data, options);
+        let routeTimer = null;
+        let packageId = 'pkg';
 
-        function formatEdgeId(u, v) {
-            return u < v ? `${u}_${v}` : `${v}_${u}`;
+        function getShortestPath(target) {
+            const path = [];
+            let curr = target;
+            while (curr !== -1) {
+                path.unshift(curr);
+                curr = dijkstraParent[curr];
+            }
+            return path;
         }
 
-        function animateRoute(positions) {
-            if (routePath.length === 0) return;
-            let step = 0;
-            const interval = 700;
+        function clearTimer() {
+            if (routeTimer) {
+                clearTimeout(routeTimer);
+                routeTimer = null;
+            }
+        }
 
-            data.nodes.add({
-                id: 'package',
-                label: '',
-                shape: 'dot',
-                size: 18,
-                color: { background: '#ffffff', border: '#ff4d6d' },
-                physics: false,
-                x: positions[routePath[0]].x,
-                y: positions[routePath[0]].y
+        function updateRoute() {
+            clearTimer();
+            const target = parseInt(document.getElementById('destSelect').value);
+            const info = document.getElementById('routeInfo');
+
+            if (dijkstraDist[target] === -1) {
+                info.innerHTML = `❌ <b>${nodes.find(n => n.id === target).label}</b> tidak terjangkau dari sumber.`;
+                return;
+            }
+
+            const path = getShortestPath(target);
+            const dist = dijkstraDist[target];
+            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist}</b>`;
+
+            // Reset all nodes & edges
+            nodes.forEach(n => {
+                const col = (n.id === sourceNode ? '#2ec4b6' : (n.id === target ? '#ff4d6d' : '#4cc9f0'));
+                data.nodes.update({ id: n.id, color: { background: col, border: '#ffffff' } });
             });
 
-            const highlightNext = () => {
-                if (step >= routePath.length) return;
+            edges.forEach(e => {
+                data.edges.update({ id: e.id, width: 3, color: { color: 'rgba(138, 180, 255, 0.9)' } });
+            });
 
-                const nodeId = routePath[step];
-                data.nodes.update({
-                    id: nodeId,
-                    color: { background: '#ffb703', border: '#ffffff' }
+            // Highlight path
+            for (let i = 1; i < path.length; i++) {
+                const u = Math.min(path[i - 1], path[i]);
+                const v = Math.max(path[i - 1], path[i]);
+                data.edges.update({ id: `${u}_${v}`, width: 6, color: { color: '#ffb703' } });
+                data.nodes.update({ id: path[i], color: { background: '#ffb703', border: '#ffffff' } });
+            }
+
+            data.nodes.update({ id: path[0], color: { background: '#2ec4b6', border: '#ffffff' } });
+            data.nodes.update({ id: target, color: { background: '#ff4d6d', border: '#ffffff' } });
+
+            // Animate package
+            if (!data.nodes.get(packageId)) {
+                data.nodes.add({
+                    id: packageId,
+                    label: '',
+                    shape: 'dot',
+                    size: 18,
+                    color: { background: '#ffffff', border: '#ff4d6d' },
+                    physics: false
                 });
+            }
 
-                data.nodes.update({
-                    id: 'package',
-                    x: positions[nodeId].x,
-                    y: positions[nodeId].y
-                });
-
-                if (step > 0) {
-                    const prevId = routePath[step - 1];
-                    const edgeId = formatEdgeId(prevId, nodeId);
-                    data.edges.update({
-                        id: edgeId,
-                        color: { color: '#ffb703' },
-                        width: 6
-                    });
+            let step = 0;
+            const move = () => {
+                if (step >= path.length) {
+                    clearTimer();
+                    return;
                 }
-                step += 1;
-                setTimeout(highlightNext, interval);
+                const pos = network.getPosition(path[step]);
+                data.nodes.update({ id: packageId, x: pos.x, y: pos.y });
+                step++;
+                routeTimer = setTimeout(move, 700);
             };
-
-            highlightNext();
+            move();
         }
 
         network.once('stabilized', () => {
-            const positions = network.getPositions(routePath);
-            animateRoute(positions);
             network.fit({ animation: { duration: 900, easingFunction: 'easeInOutQuad' } });
+            updateRoute();
         });
     </script>
 </body>
 </html>)HTML";
 
     viz.close();
-
-    // Try to open the file automatically on Windows
-    #ifdef _WIN32
-    ostringstream ss_start;
-    ss_start << "cmd /c start \"\" \"" << filename << "\"";
-    string cmd = ss_start.str();
-    system(cmd.c_str());
-    #endif
+#ifdef _WIN32
+    system(("cmd /c start \"\" \"" + filename + "\"").c_str());
+#endif
 }
 
 int main() {
@@ -432,8 +480,8 @@ int main() {
     cout << "ALGORITMA DIJKSTRA\n";
     cout << "=======================================\n\n";
     cout << "Program mencari jalur terpendek dari lokasi awal ke tujuan pengiriman paket.\n";
-    cout << "Semua titik lokasi di peta akan diberi huruf: A, B, C, ...\n";
-    cout << "\n";
+    cout << "Semua titik lokasi di peta akan diberi huruf: A, B, C, ...\n\n";
+
     cout << "Masukkan jumlah titik lokasi di peta: ";
     cin >> V;
     cout << "(Misal 4 berarti lokasi: A, B, C, D)\n\n";
@@ -455,25 +503,21 @@ int main() {
         char uChar, vChar;
         int w;
 
-        cout << "\nRuas jalan ke-" << i + 1 << ":\n";
-        cout << "Lokasi Asal: ";
-        cin >> uChar;
-        cout << "Lokasi Tujuan: ";
-        cin >> vChar;
-        cout << "Bobot Jarak: ";
-        cin >> w;
+        // ✅ INPUT DALAM SATU BARIS: A B 10
+        cout << "Ruas jalan ke-" << i + 1 << " (asal tujuan bobot): ";
+        cin >> uChar >> vChar >> w;
 
         int u = uChar - 'A';
         int v = vChar - 'A';
 
         if (u < 0 || u >= V || v < 0 || v >= V) {
-            cout << "Input lokasi salah. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
-            --i; // ulang input ruas jalan ini
+            cout << "⚠ Input lokasi salah. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+            --i;
             continue;
         }
 
         if (w < 0) {
-            cout << "Bobot harus non-negatif. Masukkan ulang ruas jalan ini.\n";
+            cout << "⚠ Bobot harus non-negatif. Masukkan ulang ruas jalan ini.\n";
             --i;
             continue;
         }
@@ -487,7 +531,6 @@ int main() {
     cin >> sourceChar;
 
     int source = sourceChar - 'A';
-
     if (source < 0 || source >= V) {
         cout << "Lokasi awal tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
         return 1;
@@ -503,9 +546,9 @@ int main() {
         return 1;
     }
 
+    // Algoritma Dijkstra
     vector<int> dist(V, INT_MAX);
     vector<int> parent(V, -1);
-
     priority_queue<pii, vector<pii>, greater<pii>> pq;
 
     dist[source] = 0;
@@ -526,12 +569,12 @@ int main() {
             if (dist[u] + weight < dist[v]) {
                 dist[v] = dist[u] + weight;
                 parent[v] = u;
-
                 pq.push({dist[v], v});
             }
         }
     }
 
+    // Rekonstruksi rute untuk tujuan utama
     vector<int> deliveryPath;
     if (dist[target] != INT_MAX) {
         int temp = target;
@@ -542,7 +585,9 @@ int main() {
         reverse(deliveryPath.begin(), deliveryPath.end());
     }
 
-    cout << "\nRute optimal pengiriman paket dari " << char(source + 'A') << " ke " << char(target + 'A') << ":\n";
+    // Output ke console
+    cout << "\nRute optimal pengiriman paket dari " << char(source + 'A') 
+         << " ke " << char(target + 'A') << ":\n";
     if (dist[target] == INT_MAX) {
         cout << "Tidak ada rute pengiriman paket yang terjangkau.\n";
     } else {
@@ -555,9 +600,11 @@ int main() {
         cout << "\n";
     }
 
+    // Simpan ke file hasil.txt
     ostringstream ss_mkdir2;
     ss_mkdir2 << "mkdir \"output\" >nul 2>&1";
     system(ss_mkdir2.str().c_str());
+    
     string outFile = string("output\\") + "hasil.txt";
     ofstream outputFile(outFile);
 
@@ -566,8 +613,6 @@ int main() {
     cout << "=======================================\n\n";
 
     outputFile << "HASIL RUTE TERPENDEK\n\n";
-
-    // Print a neat table header
     cout << "Lokasi | Jarak Terpendek | Rute\n";
     cout << "--------------------------------" << string(20, '-') << "\n";
 
@@ -577,8 +622,6 @@ int main() {
             cout << "INF          | Tidak terjangkau\n";
         } else {
             cout << dist[i] << "            | ";
-
-            // Build path
             vector<int> path;
             int temp = i;
             while (temp != -1) {
@@ -593,10 +636,9 @@ int main() {
             }
             cout << "\n";
         }
-
         cout << "--------------------------------\n";
 
-        // Also write to file
+        // Tulis ke file
         outputFile << "Tujuan Lokasi " << char(i + 'A') << endl;
         if (dist[i] == INT_MAX) {
             outputFile << "Jarak Terpendek : INF" << endl;
@@ -604,7 +646,6 @@ int main() {
         } else {
             outputFile << "Jarak Terpendek : " << dist[i] << endl;
             outputFile << "Rute            : ";
-
             vector<int> path;
             int temp = i;
             while (temp != -1) {
@@ -612,21 +653,18 @@ int main() {
                 temp = parent[temp];
             }
             reverse(path.begin(), path.end());
-
             for (int node : path) {
                 outputFile << char(node + 'A') << " ";
             }
             outputFile << endl;
         }
-
         outputFile << "--------------------------------\n";
     }
 
     outputFile.close();
 
-    // Generate visualization and open
-    writeVisualization(graph, V, source, target, deliveryPath);
-
+    // Generate visualisasi dan buka otomatis
+    writeVisualization(graph, V, source, dist, parent);
     cout << "\nHasil perhitungan juga telah disimpan ke file hasil.txt\n";
 
     return 0;

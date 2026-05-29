@@ -1,14 +1,18 @@
-HASIL SHORTEST PATH
+HASIL RUTE TERPENDEK
 
-Tujuan Node A
-Jarak Minimum : 0
-Rute          : A 
+Tujuan Lokasi A
+Jarak Terpendek : 0
+Rute            : A 
 --------------------------------
-Tujuan Node B
-Jarak Minimum : 10
-Rute          : A B 
+Tujuan Lokasi B
+Jarak Terpendek : 7
+Rute            : A C B 
 --------------------------------
-Tujuan Node C
-Jarak Minimum : 15
-Rute          : A C 
+Tujuan Lokasi C
+Jarak Terpendek : 4
+Rute            : A C 
+--------------------------------
+Tujuan Lokasi D
+Jarak Terpendek : 12
+Rute            : A C D 
 --------------------------------
