@@ -4,17 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Visualisasi Rute Dijkstra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-1: #07111f;
-            --bg-2: #0d1b31;
-            --panel: rgba(10, 18, 34, 0.76);
-            --panel-border: rgba(255, 255, 255, 0.1);
-            --text: #eef3ff;
-            --muted: #aab7d6;
+            --bg-2: #10213d;
+            --bg-3: #0c172b;
+            --panel: rgba(10, 18, 34, 0.74);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --text: #f4f7ff;
+            --muted: #a7b3d4;
             --accent: #64d2ff;
             --accent-2: #ffb703;
-            --accent-3: #f15bb5;
+            --accent-3: #ff4d6d;
+            --accent-4: #2ec4b6;
         }
 
         * {
@@ -24,20 +29,35 @@
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            font-family: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
             color: var(--text);
             background: 
-                radial-gradient(circle at top left, rgba(100, 210, 255, 0.24), transparent 32%),
-                radial-gradient(circle at top right, rgba(241, 91, 181, 0.2), transparent 28%),
-                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+                radial-gradient(circle at top left, rgba(100, 210, 255, 0.22), transparent 30%),
+                radial-gradient(circle at top right, rgba(255, 183, 3, 0.14), transparent 24%),
+                radial-gradient(circle at 75% 20%, rgba(255, 77, 109, 0.14), transparent 22%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2) 52%, var(--bg-3));
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.45), transparent 82%);
         }
 
         .shell {
             min-height: 100vh;
-            padding: 24px;
+            padding: 22px;
             display: flex;
             justify-content: center;
             align-items: stretch;
+            position: relative;
+            z-index: 1;
         }
 
         .panel {
@@ -45,15 +65,28 @@
             background: var(--panel);
             border: 1px solid var(--panel-border);
             border-radius: 28px;
-            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(18px);
             overflow: hidden;
         }
 
         .hero {
-            padding: 26px 28px 18px;
+            padding: 28px 28px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: linear-gradient(135deg, rgba(100, 210, 255, 0.12), rgba(241, 91, 181, 0.09));
+            background: linear-gradient(135deg, rgba(100, 210, 255, 0.13), rgba(255, 183, 3, 0.08));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: auto -120px -150px auto;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.22), transparent 68%);
+            filter: blur(4px);
         }
 
         .badge {
@@ -68,12 +101,17 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             animation: floatBadge 3s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
             margin: 14px 0 8px;
             font-size: clamp(28px, 3vw, 44px);
             line-height: 1.05;
+            letter-spacing: -0.03em;
+            position: relative;
+            z-index: 1;
         }
 
         .subtitle {
@@ -81,6 +119,8 @@
             color: var(--muted);
             max-width: 760px;
             line-height: 1.6;
+            position: relative;
+            z-index: 1;
         }
 
         .legend {
@@ -88,6 +128,8 @@
             flex-wrap: wrap;
             gap: 12px;
             margin-top: 18px;
+            position: relative;
+            z-index: 1;
         }
 
         .chip {
@@ -96,10 +138,11 @@
             gap: 10px;
             padding: 10px 14px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.09);
             color: var(--text);
             font-size: 14px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
         }
 
         .dot {
@@ -114,6 +157,36 @@
         .dot.yellow { background: #ffb703; }
         .dot.red { background: #ff4d6d; }
 
+        .hero-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .stat {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+        }
+
+        .stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .stat strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 18px;
+            color: var(--text);
+        }
+
         .canvas-wrap {
             padding: 18px;
         }
@@ -122,7 +195,7 @@
             width: 100%;
             height: 680px;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.11);
             background: 
                 radial-gradient(circle at center, rgba(255, 255, 255, 0.04), transparent 55%),
                 linear-gradient(180deg, rgba(8, 15, 29, 0.92), rgba(11, 20, 40, 0.98));
@@ -154,29 +227,37 @@
             align-items: center;
             flex-wrap: wrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         select, button {
-            padding: 8px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
             background: rgba(255, 255, 255, 0.08);
             color: var(--text);
             font-size: 14px;
             cursor: pointer;
+            transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+
+        select:hover, button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(100, 210, 255, 0.45);
         }
 
         button {
-            background: var(--accent);
-            color: #000;
+            background: linear-gradient(135deg, var(--accent), #8be9ff);
+            color: #02101e;
             font-weight: 600;
+            box-shadow: 0 12px 28px rgba(100, 210, 255, 0.2);
         }
 
         #routeInfo {
-            padding: 0 28px 18px;
-            color: var(--muted);
+            padding: 14px 28px 0;
+            color: var(--text);
             font-size: 14px;
-            min-height: 24px;
+            min-height: 38px;
         }
 
         @keyframes fadeInUp {
@@ -206,14 +287,28 @@
                 <p class="subtitle">Pilih tujuan untuk melihat rute terpendek, jarak, dan animasi pengiriman paket secara real-time.</p>
                 <div class="legend">
                     <span class="chip"><span class="dot teal"></span>Lokasi Awal</span>
-                    <span class="chip"><span class="dot blue"></span>Lokasi</span>
+                    <span class="chip"><span class="dot blue"></span>Node Biasa</span>
                     <span class="chip"><span class="dot red"></span>Lokasi Tujuan</span>
                     <span class="chip"><span class="dot yellow"></span>Rute Aktif</span>
+                </div>
+                <div class="hero-grid">
+                    <div class="stat">
+                        <span>Awal Pengiriman</span>
+                        <strong>C</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Tujuan Awal Visual</span>
+                        <strong>J</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Satuan Jarak</span>
+                        <strong>Km</strong>
+                    </div>
                 </div>
             </header>
             <div class="controls">
                 <label style="color:var(--muted)">Pilih Tujuan:</label>
-                <select id="destSelect"><option value="0">A</option><option value="1">B</option><option value="3">D</option><option value="4">E</option><option value="5">F</option><option value="6">G</option><option value="7">H</option><option value="8">I</option><option value="9">J</option></select>
+                <select id="destSelect"><option value="9" selected>J</option><option value="0">A</option><option value="1">B</option><option value="3">D</option><option value="4">E</option><option value="5">F</option><option value="6">G</option><option value="7">H</option><option value="8">I</option></select>
                 <button onclick="updateRoute()">🔍 Lihat Rute</button>
             </div>
             <div id="routeInfo"></div>
@@ -227,25 +322,25 @@
     </div>
     <script>
         // Inject Data Dijkstra
-        const dijkstraDist = [8, 9, 0, 3, 16, 16, 21, 36, 47, 55];
-        const dijkstraParent = [2, 2, -1, 2, 3, 0, 5, 6, 7, 8];
+        const dijkstraDist = [4, 12, 0, 4, 10, 14, 18, 21, 29, 39];
+        const dijkstraParent = [2, 2, -1, 2, 3, 3, 4, 6, 7, 8];
         const sourceNode = 2;
 
         // Generate Nodes
-        const nodes = [            { id:0, label:'A', x:432, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 8' },
-            { id:1, label:'B', x:486, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 9' },
-            { id:2, label:'C', x:0, y:0, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0' },
-            { id:3, label:'D', x:162, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 3' },
-            { id:4, label:'E', x:864, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 16' },
-            { id:5, label:'F', x:864, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 16' },
-            { id:6, label:'G', x:1134, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 21' },
-            { id:7, label:'H', x:1944, y:0, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 36' },
-            { id:8, label:'I', x:2538, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 47' },
-            { id:9, label:'J', x:2970, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 55' }
+        const nodes = [            { id:0, label:'A', x:216, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 4 Km' },
+            { id:1, label:'B', x:648, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 12 Km' },
+            { id:2, label:'C', x:0, y:0, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0 Km' },
+            { id:3, label:'D', x:216, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 4 Km' },
+            { id:4, label:'E', x:540, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 10 Km' },
+            { id:5, label:'F', x:756, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 14 Km' },
+            { id:6, label:'G', x:972, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 18 Km' },
+            { id:7, label:'H', x:1134, y:0, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 21 Km' },
+            { id:8, label:'I', x:1566, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 29 Km' },
+            { id:9, label:'J', x:2106, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 39 Km' }
         ];
 
         // Generate Edges
-        const edges = [            { id:'0_1', from:0, to:1, label:'10', width:3 },            { id:'0_2', from:0, to:2, label:'8', width:3 },            { id:'0_5', from:0, to:5, label:'8', width:3 },            { id:'1_2', from:1, to:2, label:'9', width:3 },            { id:'1_3', from:1, to:3, label:'10', width:3 },            { id:'2_3', from:2, to:3, label:'3', width:3 },            { id:'3_4', from:3, to:4, label:'13', width:3 },            { id:'4_5', from:4, to:5, label:'8', width:3 },            { id:'5_6', from:5, to:6, label:'5', width:3 },            { id:'6_7', from:6, to:7, label:'15', width:3 },            { id:'7_8', from:7, to:8, label:'11', width:3 },            { id:'8_9', from:8, to:9, label:'8', width:3 },        ];
+        const edges = [            { id:'0_1', from:0, to:1, label:'10 Km', width:3 },            { id:'0_2', from:0, to:2, label:'4 Km', width:3 },            { id:'1_2', from:1, to:2, label:'12 Km', width:3 },            { id:'1_3', from:1, to:3, label:'9 Km', width:3 },            { id:'2_3', from:2, to:3, label:'4 Km', width:3 },            { id:'2_4', from:2, to:4, label:'14 Km', width:3 },            { id:'3_4', from:3, to:4, label:'6 Km', width:3 },            { id:'3_5', from:3, to:5, label:'10 Km', width:3 },            { id:'4_5', from:4, to:5, label:'7 Km', width:3 },            { id:'4_6', from:4, to:6, label:'8 Km', width:3 },            { id:'5_6', from:5, to:6, label:'14 Km', width:3 },            { id:'5_7', from:5, to:7, label:'8 Km', width:3 },            { id:'6_7', from:6, to:7, label:'3 Km', width:3 },            { id:'7_8', from:7, to:8, label:'8 Km', width:3 },            { id:'8_9', from:8, to:9, label:'10 Km', width:3 },        ];
 
         const container = document.getElementById('mynetwork');
         const data = {
@@ -326,15 +421,16 @@
             clearTimer();
             const target = parseInt(document.getElementById('destSelect').value);
             const info = document.getElementById('routeInfo');
+            const targetNode = nodes.find(n => n.id === target);
 
             if (dijkstraDist[target] === -1) {
-                info.innerHTML = `❌ <b>${nodes.find(n => n.id === target).label}</b> tidak terjangkau dari sumber.`;
+                info.innerHTML = `❌ <b>${targetNode.label}</b> tidak terjangkau dari sumber.`;
                 return;
             }
 
             const path = getShortestPath(target);
             const dist = dijkstraDist[target];
-            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist}</b>`;
+            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist} Km</b>`;
 
             // Reset all nodes & edges
             nodes.forEach(n => {
