@@ -5,14 +5,14 @@ Jarak Terpendek : 0
 Rute            : A 
 --------------------------------
 Tujuan Lokasi B
-Jarak Terpendek : 7
-Rute            : A C B 
+Jarak Terpendek : 8
+Rute            : A B 
 --------------------------------
 Tujuan Lokasi C
-Jarak Terpendek : 4
-Rute            : A C 
+Jarak Terpendek : 10
+Rute            : A B C 
 --------------------------------
 Tujuan Lokasi D
-Jarak Terpendek : 12
-Rute            : A C D 
+Jarak Terpendek : 11
+Rute            : A B C D 
 --------------------------------

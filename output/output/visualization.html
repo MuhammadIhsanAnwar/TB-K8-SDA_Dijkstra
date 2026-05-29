@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visualisasi Rute Dijkstra</title>
+    <style>
+        :root {
+            --bg-1: #07111f;
+            --bg-2: #0d1b31;
+            --panel: rgba(10, 18, 34, 0.76);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text: #eef3ff;
+            --muted: #aab7d6;
+            --accent: #64d2ff;
+            --accent-2: #ffb703;
+            --accent-3: #f15bb5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            color: var(--text);
+            background: 
+                radial-gradient(circle at top left, rgba(100, 210, 255, 0.24), transparent 32%),
+                radial-gradient(circle at top right, rgba(241, 91, 181, 0.2), transparent 28%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+        }
+
+        .shell {
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .panel {
+            width: min(1260px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 26px 28px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(100, 210, 255, 0.12), rgba(241, 91, 181, 0.09));
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--muted);
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            animation: floatBadge 3s ease-in-out infinite;
+        }
+
+        h1 {
+            margin: 14px 0 8px;
+            font-size: clamp(28px, 3vw, 44px);
+            line-height: 1.05;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            max-width: 760px;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+        }
+
+        .canvas-wrap {
+            padding: 18px;
+        }
+
+        #mynetwork {
+            width: 100%;
+            height: 680px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: 
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.04), transparent 55%),
+                linear-gradient(180deg, rgba(8, 15, 29, 0.92), rgba(11, 20, 40, 0.98));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            opacity: 0;
+            transform: translateY(14px);
+            animation: fadeInUp 900ms ease forwards;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 0 28px 24px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .footer strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .controls {
+            padding: 16px 28px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        select, button {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        #routeInfo {
+            padding: 0 28px 18px;
+            color: var(--muted);
+            font-size: 14px;
+            min-height: 24px;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatBadge {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+    </style>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+    <div class="shell">
+        <section class="panel">
+            <header class="hero">
+                <span class="badge">Dijkstra Path Visualization</span>
+                <h1>Visualisasi Jaringan Interaktif</h1>
+                <p class="subtitle">Pilih tujuan untuk melihat rute terpendek, jarak, dan animasi pengiriman paket secara real-time.</p>
+                <div class="legend">
+                    <span class="chip"><span class="dot" style="background:#2ec4b6"></span>Lokasi Awal</span>
+                    <span class="chip"><span class="dot" style="background:#ff4d6d"></span>Lokasi Tujuan</span>
+                    <span class="chip"><span class="dot" style="background:#ffb703"></span>Rute Aktif</span>
+                    <span class="chip"><span class="dot" style="background:#4cc9f0"></span>Lokasi</span>
+                </div>
+            </header>
+            <div class="controls">
+                <label style="color:var(--muted)">Pilih Tujuan:</label>
+                <select id="destSelect"><option value="0">A</option><option value="2">C</option><option value="3">D</option></select>
+                <button onclick="updateRoute()">🔍 Lihat Rute</button>
+            </div>
+            <div id="routeInfo"></div>
+            <div class="canvas-wrap">
+                <div id="mynetwork"></div>
+            </div>
+            <div class="footer">
+                <span><strong>Tip:</strong> geser/zoom untuk eksplorasi.</span>
+                <span>Auto-generated by C++ Dijkstra</span>
+            </div>
+        </section>
+    </div>
+    <script>
+        // Inject Data Dijkstra
+        const dijkstraDist = [8, 0, 6, 7];
+        const dijkstraParent = [1, -1, 1, 1];
+        const sourceNode = 1;
+
+        // Generate Nodes
+        const nodes = [            { id:0, label:'A', x:-80, y:-80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 8' },
+            { id:1, label:'B', x:80, y:-80, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0' },
+            { id:2, label:'C', x:-80, y:80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 6' },
+            { id:3, label:'D', x:80, y:80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 7' }
+        ];
+
+        // Generate Edges
+        const edges = [            { id:'0_1', from:0, to:1, label:'8', width:3 },            { id:'0_3', from:0, to:3, label:'10', width:3 },            { id:'1_2', from:1, to:2, label:'6', width:3 },            { id:'1_3', from:1, to:3, label:'7', width:3 },            { id:'2_3', from:2, to:3, label:'4', width:3 },            { id:'2_3', from:2, to:3, label:'9', width:3 },        ];
+
+        const container = document.getElementById('mynetwork');
+        const data = {
+            nodes: new vis.DataSet(nodes),
+            edges: new vis.DataSet(edges)
+        };
+
+        const options = {
+            autoResize: true,
+            interaction: {
+                hover: true,
+                tooltipDelay: 120,
+                navigationButtons: true,
+                keyboard: true
+            },
+            layout: {
+                improvedLayout: false
+            },
+            nodes: {
+                shape: 'dot',
+                size: 28,
+                borderWidth: 3,
+                font: {
+                    size: 22,
+                    face: 'Segoe UI',
+                    color: '#f7f9ff'
+                },
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0, 0, 0, 0.35)',
+                    size: 18
+                }
+            },
+            edges: {
+                smooth: {
+                    enabled: true,
+                    type: 'dynamic',
+                    roundness: 0.35
+                },
+                color: {
+                    color: 'rgba(138, 180, 255, 0.9)',
+                    highlight: '#ffd166',
+                    hover: '#ffffff'
+                },
+                font: {
+                    align: 'middle',
+                    size: 15,
+                    color: '#f8f9ff',
+                    strokeWidth: 5,
+                    strokeColor: 'rgba(5, 10, 20, 0.84)'
+                }
+            },
+            physics: {
+                enabled: true,
+                stabilization: {
+                    iterations: 180,
+                    fit: true
+                },
+                barnesHut: {
+                    gravitationalConstant: -8000,
+                    centralGravity: 0.15,
+                    springLength: 180,
+                    springConstant: 0.05,
+                    damping: 0.25
+                }
+            }
+        };
+
+        const network = new vis.Network(container, data, options);
+        let routeTimer = null;
+        let packageId = 'pkg';
+
+        function getShortestPath(target) {
+            const path = [];
+            let curr = target;
+            while (curr !== -1) {
+                path.unshift(curr);
+                curr = dijkstraParent[curr];
+            }
+            return path;
+        }
+
+        function clearTimer() {
+            if (routeTimer) {
+                clearTimeout(routeTimer);
+                routeTimer = null;
+            }
+        }
+
+        function updateRoute() {
+            clearTimer();
+            const target = parseInt(document.getElementById('destSelect').value);
+            const info = document.getElementById('routeInfo');
+
+            if (dijkstraDist[target] === -1) {
+                info.innerHTML = `❌ <b>${nodes.find(n => n.id === target).label}</b> tidak terjangkau dari sumber.`;
+                return;
+            }
+
+            const path = getShortestPath(target);
+            const dist = dijkstraDist[target];
+            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist}</b>`;
+
+            // Reset all nodes & edges
+            nodes.forEach(n => {
+                const col = (n.id === sourceNode ? '#2ec4b6' : (n.id === target ? '#ff4d6d' : '#4cc9f0'));
+                data.nodes.update({ id: n.id, color: { background: col, border: '#ffffff' } });
+            });
+
+            edges.forEach(e => {
+                data.edges.update({ id: e.id, width: 3, color: { color: 'rgba(138, 180, 255, 0.9)' } });
+            });
+
+            // Highlight path
+            for (let i = 1; i < path.length; i++) {
+                const u = Math.min(path[i - 1], path[i]);
+                const v = Math.max(path[i - 1], path[i]);
+                data.edges.update({ id: `${u}_${v}`, width: 6, color: { color: '#ffb703' } });
+                data.nodes.update({ id: path[i], color: { background: '#ffb703', border: '#ffffff' } });
+            }
+
+            data.nodes.update({ id: path[0], color: { background: '#2ec4b6', border: '#ffffff' } });
+            data.nodes.update({ id: target, color: { background: '#ff4d6d', border: '#ffffff' } });
+
+            // Animate package
+            if (!data.nodes.get(packageId)) {
+                data.nodes.add({
+                    id: packageId,
+                    label: '',
+                    shape: 'dot',
+                    size: 18,
+                    color: { background: '#ffffff', border: '#ff4d6d' },
+                    physics: false
+                });
+            }
+
+            let step = 0;
+            const move = () => {
+                if (step >= path.length) {
+                    clearTimer();
+                    return;
+                }
+                const pos = network.getPosition(path[step]);
+                data.nodes.update({ id: packageId, x: pos.x, y: pos.y });
+                step++;
+                routeTimer = setTimeout(move, 700);
+            };
+            move();
+        }
+
+        network.once('stabilized', () => {
+            network.fit({ animation: { duration: 900, easingFunction: 'easeInOutQuad' } });
+            updateRoute();
+        });
+    </script>
+</body>
+</html>

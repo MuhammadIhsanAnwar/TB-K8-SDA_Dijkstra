@@ -109,6 +109,10 @@
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
         }
 
+        .dot.blue { background: #4cc9f0; }
+        .dot.yellow { background: #ffb703; }
+        .dot.red { background: #ff4d6d; }
+
         .canvas-wrap {
             padding: 18px;
         }
@@ -200,10 +204,10 @@
                 <h1>Visualisasi Jaringan Interaktif</h1>
                 <p class="subtitle">Pilih tujuan untuk melihat rute terpendek, jarak, dan animasi pengiriman paket secara real-time.</p>
                 <div class="legend">
-                    <span class="chip"><span class="dot" style="background:#2ec4b6"></span>Lokasi Awal</span>
-                    <span class="chip"><span class="dot" style="background:#ff4d6d"></span>Lokasi Tujuan</span>
-                    <span class="chip"><span class="dot" style="background:#ffb703"></span>Rute Aktif</span>
-                    <span class="chip"><span class="dot" style="background:#4cc9f0"></span>Lokasi</span>
+                    <span class="chip"><span class="dot blue"></span>Lokasi Awal</span>
+                    <span class="chip"><span class="dot red"></span>Lokasi Tujuan</span>
+                    <span class="chip"><span class="dot yellow"></span>Rute Aktif</span>
+                    <span class="chip"><span class="dot blue"></span>Lokasi</span>
                 </div>
             </header>
             <div class="controls">
@@ -223,19 +227,19 @@
     </div>
     <script>
         // Inject Data Dijkstra
-        const dijkstraDist = [0, 7, 4, 12];
-        const dijkstraParent = [-1, 2, 0, 2];
+        const dijkstraDist = [0, 8, 10, 11];
+        const dijkstraParent = [-1, 0, 1, 2];
         const sourceNode = 0;
 
         // Generate Nodes
-        const nodes = [            { id:0, label:'A', x:-80, y:-80, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0' },
-            { id:1, label:'B', x:80, y:-80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 7' },
-            { id:2, label:'C', x:-80, y:80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 4' },
-            { id:3, label:'D', x:80, y:80, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 12' }
+        const nodes = [            { id:0, label:'A', x:0, y:-240, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0' },
+            { id:1, label:'B', x:432, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 8' },
+            { id:2, label:'C', x:540, y:0, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 10' },
+            { id:3, label:'D', x:594, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 11' }
         ];
 
         // Generate Edges
-        const edges = [            { id:'0_1', from:0, to:1, label:'10', width:3 },            { id:'0_2', from:0, to:2, label:'4', width:3 },            { id:'1_2', from:1, to:2, label:'3', width:3 },            { id:'1_3', from:1, to:3, label:'12', width:3 },            { id:'2_3', from:2, to:3, label:'8', width:3 },        ];
+        const edges = [            { id:'0_1', from:0, to:1, label:'8', width:3 },            { id:'0_3', from:0, to:3, label:'20', width:3 },            { id:'1_2', from:1, to:2, label:'2', width:3 },            { id:'2_3', from:2, to:3, label:'1', width:3 },        ];
 
         const container = document.getElementById('mynetwork');
         const data = {
@@ -288,20 +292,7 @@
                     strokeColor: 'rgba(5, 10, 20, 0.84)'
                 }
             },
-            physics: {
-                enabled: true,
-                stabilization: {
-                    iterations: 180,
-                    fit: true
-                },
-                barnesHut: {
-                    gravitationalConstant: -8000,
-                    centralGravity: 0.15,
-                    springLength: 180,
-                    springConstant: 0.05,
-                    damping: 0.25
-                }
-            }
+            physics: false
         };
 
         const network = new vis.Network(container, data, options);
@@ -320,7 +311,7 @@
 
         function clearTimer() {
             if (routeTimer) {
-                clearTimeout(routeTimer);
+                cancelAnimationFrame(routeTimer);
                 routeTimer = null;
             }
         }
@@ -341,7 +332,7 @@
 
             // Reset all nodes & edges
             nodes.forEach(n => {
-                const col = (n.id === sourceNode ? '#2ec4b6' : (n.id === target ? '#ff4d6d' : '#4cc9f0'));
+                const col = (n.id === target ? '#ff4d6d' : '#4cc9f0');
                 data.nodes.update({ id: n.id, color: { background: col, border: '#ffffff' } });
             });
 
@@ -357,7 +348,7 @@
                 data.nodes.update({ id: path[i], color: { background: '#ffb703', border: '#ffffff' } });
             }
 
-            data.nodes.update({ id: path[0], color: { background: '#2ec4b6', border: '#ffffff' } });
+            data.nodes.update({ id: path[0], color: { background: '#4cc9f0', border: '#ffffff' } });
             data.nodes.update({ id: target, color: { background: '#ff4d6d', border: '#ffffff' } });
 
             // Animate package
@@ -372,21 +363,48 @@
                 });
             }
 
-            let step = 0;
-            const move = () => {
-                if (step >= path.length) {
-                    clearTimer();
-                    return;
-                }
-                const pos = network.getPosition(path[step]);
+            if (path.length === 1) {
+                const pos = network.getPosition(path[0]);
                 data.nodes.update({ id: packageId, x: pos.x, y: pos.y });
-                step++;
-                routeTimer = setTimeout(move, 700);
+                return;
+            }
+
+            const segmentDuration = 850;
+            let segmentIndex = 0;
+            let startedAt = null;
+
+            const move = (timestamp) => {
+                if (!startedAt) {
+                    startedAt = timestamp;
+                }
+
+                const fromNode = path[segmentIndex];
+                const toNode = path[segmentIndex + 1];
+                const fromPos = network.getPosition(fromNode);
+                const toPos = network.getPosition(toNode);
+                const progress = Math.min(1, (timestamp - startedAt) / segmentDuration);
+
+                data.nodes.update({
+                    id: packageId,
+                    x: fromPos.x + (toPos.x - fromPos.x) * progress,
+                    y: fromPos.y + (toPos.y - fromPos.y) * progress
+                });
+
+                if (progress >= 1) {
+                    segmentIndex++;
+                    startedAt = timestamp;
+                    if (segmentIndex >= path.length - 1) {
+                        segmentIndex = 0;
+                    }
+                }
+
+                routeTimer = requestAnimationFrame(move);
             };
-            move();
+
+            routeTimer = requestAnimationFrame(move);
         }
 
-        network.once('stabilized', () => {
+        requestAnimationFrame(() => {
             network.fit({ animation: { duration: 900, easingFunction: 'easeInOutQuad' } });
             updateRoute();
         });

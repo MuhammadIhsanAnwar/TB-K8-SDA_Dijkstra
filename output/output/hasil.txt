@@ -1,0 +1,18 @@
+HASIL RUTE TERPENDEK
+
+Tujuan Lokasi A
+Jarak Terpendek : 8
+Rute            : B A 
+--------------------------------
+Tujuan Lokasi B
+Jarak Terpendek : 0
+Rute            : B 
+--------------------------------
+Tujuan Lokasi C
+Jarak Terpendek : 6
+Rute            : B C 
+--------------------------------
+Tujuan Lokasi D
+Jarak Terpendek : 7
+Rute            : B D 
+--------------------------------
