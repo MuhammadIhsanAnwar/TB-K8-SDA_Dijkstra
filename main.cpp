@@ -20,7 +20,7 @@ struct Edge {
 typedef pair<int, int> pii;
 
 // Fungsi untuk menulis visualisasi HTML
-void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, 
+void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, int target,
                         const vector<int>& dist, const vector<int>& parent) {
     string outDir = "output";
     system(("mkdir \"" + outDir + "\" >nul 2>&1").c_str());
@@ -53,17 +53,22 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Visualisasi Rute Dijkstra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-1: #07111f;
-            --bg-2: #0d1b31;
-            --panel: rgba(10, 18, 34, 0.76);
-            --panel-border: rgba(255, 255, 255, 0.1);
-            --text: #eef3ff;
-            --muted: #aab7d6;
+            --bg-2: #10213d;
+            --bg-3: #0c172b;
+            --panel: rgba(10, 18, 34, 0.74);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --text: #f4f7ff;
+            --muted: #a7b3d4;
             --accent: #64d2ff;
             --accent-2: #ffb703;
-            --accent-3: #f15bb5;
+            --accent-3: #ff4d6d;
+            --accent-4: #2ec4b6;
         }
 
         * {
@@ -73,20 +78,35 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+            font-family: "Inter", "Segoe UI", Tahoma, Arial, sans-serif;
             color: var(--text);
             background: 
-                radial-gradient(circle at top left, rgba(100, 210, 255, 0.24), transparent 32%),
-                radial-gradient(circle at top right, rgba(241, 91, 181, 0.2), transparent 28%),
-                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+                radial-gradient(circle at top left, rgba(100, 210, 255, 0.22), transparent 30%),
+                radial-gradient(circle at top right, rgba(255, 183, 3, 0.14), transparent 24%),
+                radial-gradient(circle at 75% 20%, rgba(255, 77, 109, 0.14), transparent 22%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2) 52%, var(--bg-3));
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.45), transparent 82%);
         }
 
         .shell {
             min-height: 100vh;
-            padding: 24px;
+            padding: 22px;
             display: flex;
             justify-content: center;
             align-items: stretch;
+            position: relative;
+            z-index: 1;
         }
 
         .panel {
@@ -94,15 +114,28 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             background: var(--panel);
             border: 1px solid var(--panel-border);
             border-radius: 28px;
-            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(18px);
             overflow: hidden;
         }
 
         .hero {
-            padding: 26px 28px 18px;
+            padding: 28px 28px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: linear-gradient(135deg, rgba(100, 210, 255, 0.12), rgba(241, 91, 181, 0.09));
+            background: linear-gradient(135deg, rgba(100, 210, 255, 0.13), rgba(255, 183, 3, 0.08));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: auto -120px -150px auto;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 183, 3, 0.22), transparent 68%);
+            filter: blur(4px);
         }
 
         .badge {
@@ -117,12 +150,17 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             letter-spacing: 0.08em;
             text-transform: uppercase;
             animation: floatBadge 3s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
             margin: 14px 0 8px;
             font-size: clamp(28px, 3vw, 44px);
             line-height: 1.05;
+            letter-spacing: -0.03em;
+            position: relative;
+            z-index: 1;
         }
 
         .subtitle {
@@ -130,6 +168,8 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             color: var(--muted);
             max-width: 760px;
             line-height: 1.6;
+            position: relative;
+            z-index: 1;
         }
 
         .legend {
@@ -137,6 +177,8 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             flex-wrap: wrap;
             gap: 12px;
             margin-top: 18px;
+            position: relative;
+            z-index: 1;
         }
 
         .chip {
@@ -145,10 +187,11 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             gap: 10px;
             padding: 10px 14px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.09);
             color: var(--text);
             font-size: 14px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
         }
 
         .dot {
@@ -163,6 +206,36 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
         .dot.yellow { background: #ffb703; }
         .dot.red { background: #ff4d6d; }
 
+        .hero-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .stat {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+        }
+
+        .stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .stat strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 18px;
+            color: var(--text);
+        }
+
         .canvas-wrap {
             padding: 18px;
         }
@@ -171,7 +244,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             width: 100%;
             height: 680px;
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.11);
             background: 
                 radial-gradient(circle at center, rgba(255, 255, 255, 0.04), transparent 55%),
                 linear-gradient(180deg, rgba(8, 15, 29, 0.92), rgba(11, 20, 40, 0.98));
@@ -203,29 +276,37 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             align-items: center;
             flex-wrap: wrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         select, button {
-            padding: 8px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
             background: rgba(255, 255, 255, 0.08);
             color: var(--text);
             font-size: 14px;
             cursor: pointer;
+            transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+
+        select:hover, button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(100, 210, 255, 0.45);
         }
 
         button {
-            background: var(--accent);
-            color: #000;
+            background: linear-gradient(135deg, var(--accent), #8be9ff);
+            color: #02101e;
             font-weight: 600;
+            box-shadow: 0 12px 28px rgba(100, 210, 255, 0.2);
         }
 
         #routeInfo {
-            padding: 0 28px 18px;
-            color: var(--muted);
+            padding: 14px 28px 0;
+            color: var(--text);
             font-size: 14px;
-            min-height: 24px;
+            min-height: 38px;
         }
 
         @keyframes fadeInUp {
@@ -255,17 +336,35 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
                 <p class="subtitle">Pilih tujuan untuk melihat rute terpendek, jarak, dan animasi pengiriman paket secara real-time.</p>
                 <div class="legend">
                     <span class="chip"><span class="dot teal"></span>Lokasi Awal</span>
-                    <span class="chip"><span class="dot blue"></span>Lokasi</span>
+                    <span class="chip"><span class="dot blue"></span>Node Biasa</span>
                     <span class="chip"><span class="dot red"></span>Lokasi Tujuan</span>
                     <span class="chip"><span class="dot yellow"></span>Rute Aktif</span>
+                </div>
+                <div class="hero-grid">
+                    <div class="stat">
+                        <span>Awal Pengiriman</span>
+                        <strong>)HTML" << char('A' + source) << R"HTML(</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Tujuan Awal Visual</span>
+                        <strong>)HTML" << char('A' + target) << R"HTML(</strong>
+                    </div>
+                    <div class="stat">
+                        <span>Satuan Jarak</span>
+                        <strong>Km</strong>
+                    </div>
                 </div>
             </header>
             <div class="controls">
                 <label style="color:var(--muted)">Pilih Tujuan:</label>
                 <select id="destSelect">)HTML";
 
+    if (target != source) {
+        viz << "<option value=\"" << target << "\" selected>" << char('A' + target) << "</option>";
+    }
+
     for (int i = 0; i < V; ++i) {
-        if (i == source) continue;
+        if (i == source || i == target) continue;
         viz << "<option value=\"" << i << "\">" << char('A' + i) << "</option>";
     }
     viz << R"HTML(</select>
@@ -302,7 +401,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
         viz << "            { id:" << i << ", label:'" << char('A' + i) << "', x:" << coords[i].first 
             << ", y:" << coords[i].second << ", color:{background:'" << col 
             << "', border:'#ffffff'}, title:'Jarak dari sumber: " 
-            << (dist[i] == INT_MAX ? "∞ (tidak terjangkau)" : to_string(dist[i])) + "' }";
+            << (dist[i] == INT_MAX ? "∞ (tidak terjangkau)" : to_string(dist[i]) + " Km") + "' }";
         if (i < V - 1) viz << ",";
         viz << "\n";
     }
@@ -316,7 +415,7 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             int v = e.to;
             if (u < v) {
                 viz << "            { id:'" << u << "_" << v << "', from:" << u 
-                    << ", to:" << v << ", label:'" << e.weight << "', width:3 },";
+                    << ", to:" << v << ", label:'" << e.weight << " Km', width:3 },";
             }
         }
     }
@@ -401,15 +500,16 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source,
             clearTimer();
             const target = parseInt(document.getElementById('destSelect').value);
             const info = document.getElementById('routeInfo');
+            const targetNode = nodes.find(n => n.id === target);
 
             if (dijkstraDist[target] === -1) {
-                info.innerHTML = `❌ <b>${nodes.find(n => n.id === target).label}</b> tidak terjangkau dari sumber.`;
+                info.innerHTML = `❌ <b>${targetNode.label}</b> tidak terjangkau dari sumber.`;
                 return;
             }
 
             const path = getShortestPath(target);
             const dist = dijkstraDist[target];
-            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist}</b>`;
+            info.innerHTML = `✅ Rute: ${path.map(id => nodes.find(n => n.id === id).label).join(' → ')} | <b>Jarak: ${dist} Km</b>`;
 
             // Reset all nodes & edges
             nodes.forEach(n => {
@@ -715,7 +815,7 @@ int main() {
     outputFile.close();
 
     // Generate visualisasi dan buka otomatis
-    writeVisualization(graph, V, source, dist, parent);
+    writeVisualization(graph, V, source, target, dist, parent);
     cout << "\nHasil perhitungan juga telah disimpan ke file hasil.txt\n";
 
     return 0;
