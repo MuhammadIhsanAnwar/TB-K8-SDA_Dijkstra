@@ -5,7 +5,7 @@ Jarak Terpendek : 4
 Rute            : C A 
 --------------------------------
 Tujuan Lokasi B
-Jarak Terpendek : 12
+Jarak Terpendek : 10
 Rute            : C B 
 --------------------------------
 Tujuan Lokasi C
@@ -21,22 +21,22 @@ Jarak Terpendek : 10
 Rute            : C D E 
 --------------------------------
 Tujuan Lokasi F
-Jarak Terpendek : 14
-Rute            : C D F 
+Jarak Terpendek : 10
+Rute            : C F 
 --------------------------------
 Tujuan Lokasi G
 Jarak Terpendek : 18
-Rute            : C D E G 
+Rute            : C D G 
 --------------------------------
 Tujuan Lokasi H
 Jarak Terpendek : 21
-Rute            : C D E G H 
+Rute            : C D G H 
 --------------------------------
 Tujuan Lokasi I
 Jarak Terpendek : 29
-Rute            : C D E G H I 
+Rute            : C D G H I 
 --------------------------------
 Tujuan Lokasi J
 Jarak Terpendek : 39
-Rute            : C D E G H I J 
+Rute            : C D G H I J 
 --------------------------------

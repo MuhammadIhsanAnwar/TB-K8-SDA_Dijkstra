@@ -628,7 +628,13 @@ int main() {
 
     cout << CYAN "Masukkan jumlah titik lokasi di peta: " RESET;
     cin >> V;
+
     cout << GREEN "(Misal 4 berarti lokasi: A, B, C, D)\n\n" RESET;
+
+    if (V <= 0) {
+    cout << BOLD_RED "Error: Jumlah lokasi harus angka dan lebih dari 0!\n" RESET;
+    return 1;
+    }
 
     vector<vector<Edge>> graph(V);
 

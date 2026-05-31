@@ -294,11 +294,11 @@
                 <div class="hero-grid">
                     <div class="stat">
                         <span>Awal Pengiriman</span>
-                        <strong>A</strong>
+                        <strong>C</strong>
                     </div>
                     <div class="stat">
                         <span>Tujuan Awal Visual</span>
-                        <strong>D</strong>
+                        <strong>J</strong>
                     </div>
                     <div class="stat">
                         <span>Satuan Jarak</span>
@@ -308,7 +308,7 @@
             </header>
             <div class="controls">
                 <label style="color:var(--muted)">Pilih Tujuan:</label>
-                <select id="destSelect"><option value="3" selected>D</option><option value="1">B</option><option value="2">C</option></select>
+                <select id="destSelect"><option value="9" selected>J</option><option value="0">A</option><option value="1">B</option><option value="3">D</option><option value="4">E</option><option value="5">F</option><option value="6">G</option><option value="7">H</option><option value="8">I</option></select>
                 <button onclick="updateRoute()">🔍 Lihat Rute</button>
             </div>
             <div id="routeInfo"></div>
@@ -322,19 +322,25 @@
     </div>
     <script>
         // Inject Data Dijkstra
-        const dijkstraDist = [0, 9, 3, 3];
-        const dijkstraParent = [-1, 2, 0, 0];
-        const sourceNode = 0;
+        const dijkstraDist = [4, 10, 0, 4, 10, 10, 18, 21, 29, 39];
+        const dijkstraParent = [2, 2, -1, 2, 3, 2, 3, 6, 7, 8];
+        const sourceNode = 2;
 
         // Generate Nodes
-        const nodes = [            { id:0, label:'A', x:0, y:-240, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0 Km' },
-            { id:1, label:'B', x:486, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 9 Km' },
-            { id:2, label:'C', x:162, y:0, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 3 Km' },
-            { id:3, label:'D', x:162, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 3 Km' }
+        const nodes = [            { id:0, label:'A', x:216, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 4 Km' },
+            { id:1, label:'B', x:540, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 10 Km' },
+            { id:2, label:'C', x:0, y:0, color:{background:'#2ec4b6', border:'#ffffff'}, title:'Jarak dari sumber: 0 Km' },
+            { id:3, label:'D', x:216, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 4 Km' },
+            { id:4, label:'E', x:540, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 10 Km' },
+            { id:5, label:'F', x:540, y:-240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 10 Km' },
+            { id:6, label:'G', x:972, y:-120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 18 Km' },
+            { id:7, label:'H', x:1134, y:0, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 21 Km' },
+            { id:8, label:'I', x:1566, y:120, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 29 Km' },
+            { id:9, label:'J', x:2106, y:240, color:{background:'#4cc9f0', border:'#ffffff'}, title:'Jarak dari sumber: 39 Km' }
         ];
 
         // Generate Edges
-        const edges = [            { id:'0_2', from:0, to:2, label:'3 Km', width:3 },            { id:'0_3', from:0, to:3, label:'3 Km', width:3 },            { id:'1_2', from:1, to:2, label:'6 Km', width:3 },            { id:'2_3', from:2, to:3, label:'2 Km', width:3 },        ];
+        const edges = [            { id:'0_2', from:0, to:2, label:'4 Km', width:3 },            { id:'0_5', from:0, to:5, label:'10 Km', width:3 },            { id:'1_2', from:1, to:2, label:'10 Km', width:3 },            { id:'1_3', from:1, to:3, label:'10 Km', width:3 },            { id:'1_4', from:1, to:4, label:'9 Km', width:3 },            { id:'2_3', from:2, to:3, label:'4 Km', width:3 },            { id:'2_5', from:2, to:5, label:'10 Km', width:3 },            { id:'3_4', from:3, to:4, label:'6 Km', width:3 },            { id:'3_6', from:3, to:6, label:'14 Km', width:3 },            { id:'4_5', from:4, to:5, label:'7 Km', width:3 },            { id:'4_6', from:4, to:6, label:'8 Km', width:3 },            { id:'5_6', from:5, to:6, label:'14 Km', width:3 },            { id:'6_7', from:6, to:7, label:'3 Km', width:3 },            { id:'7_8', from:7, to:8, label:'8 Km', width:3 },            { id:'8_9', from:8, to:9, label:'10 Km', width:3 },        ];
 
         const container = document.getElementById('mynetwork');
         const data = {
