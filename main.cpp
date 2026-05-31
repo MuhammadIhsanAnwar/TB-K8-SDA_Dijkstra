@@ -12,6 +12,23 @@
 
 using namespace std;
 
+// ANSI Color Codes untuk Windows
+#define RESET       "\033[0m"
+#define BOLD        "\033[1m"
+#define RED         "\033[31m"
+#define GREEN       "\033[32m"
+#define YELLOW      "\033[33m"
+#define BLUE        "\033[34m"
+#define MAGENTA     "\033[35m"
+#define CYAN        "\033[36m"
+#define WHITE       "\033[37m"
+#define BOLD_RED    "\033[1;31m"
+#define BOLD_GREEN  "\033[1;32m"
+#define BOLD_YELLOW "\033[1;33m"
+#define BOLD_BLUE   "\033[1;34m"
+#define BOLD_CYAN   "\033[1;36m"
+#define BOLD_WHITE  "\033[1;37m" 
+
 struct Edge {
     int to;
     int weight;
@@ -602,33 +619,32 @@ void writeVisualization(const vector<vector<Edge>>& graph, int V, int source, in
 int main() {
     int V, E;
 
-    cout << "=======================================\n";
-    cout << "SISTEM OPTIMASI PENGIRIMAN PAKET\n";
-    cout << "ALGORITMA DIJKSTRA\n";
-    cout << "=======================================\n\n";
-    cout << "Program mencari jalur terpendek dari lokasi awal ke tujuan pengiriman paket.\n";
-    cout << "Semua titik lokasi di peta akan diberi huruf: A, B, C, ...\n\n";
+    cout << BOLD_CYAN "=======================================\n" RESET;
+    cout << BOLD_YELLOW "SISTEM OPTIMASI PENGIRIMAN PAKET\n" RESET;
+    cout << BOLD_GREEN "ALGORITMA DIJKSTRA\n" RESET;
+    cout << BOLD_CYAN "=======================================\n\n" RESET;
+    cout << BLUE "Program mencari jalur terpendek dari lokasi awal ke tujuan pengiriman paket.\n" RESET;
+    cout << BLUE "Semua titik lokasi di peta akan diberi huruf: A, B, C, ...\n\n" RESET;
 
-    cout << "Masukkan jumlah titik lokasi di peta: ";
+    cout << CYAN "Masukkan jumlah titik lokasi di peta: " RESET;
     cin >> V;
-    cout << "(Misal 4 berarti lokasi: A, B, C, D)\n\n";
+    cout << GREEN "(Misal 4 berarti lokasi: A, B, C, D)\n\n" RESET;
 
     vector<vector<Edge>> graph(V);
 
-    cout << "Masukkan jumlah ruas jalan yang menghubungkan lokasi: ";
+    cout << CYAN "Masukkan jumlah ruas jalan yang menghubungkan lokasi: " RESET;
     cin >> E;
 
-    cout << "\nMasukkan data ruas jalan antar lokasi\n";
-    cout << "Format setiap baris: asal tujuan bobot\n";
-    cout << "Contoh: A B 8  -> ruas jalan dari A ke B dengan bobot 8\n\n";
-    cout << "Gunakan huruf A.." << char('A' + V - 1) << " untuk semua lokasi.\n";
-    cout << "(Misal jika jumlah lokasi 5, gunakan A..E; jika jumlah lokasi 6, gunakan A..F.)\n";
-    cout << "Setiap baris berisi 3 nilai: lokasi asal, lokasi tujuan, dan bobot jarak.\n";
-    cout << "Contoh input ruas jalan: A B 8\n\n";
+    cout << "\n" BOLD_YELLOW "Masukkan data ruas jalan antar lokasi\n" RESET;
+    cout << YELLOW "Gunakan huruf A.." << char('A' + V - 1) << " untuk semua lokasi.\n" RESET;
+    cout << YELLOW "Setiap ruas jalan akan diminta dalam 3 input terpisah:\n" RESET;
+    cout << YELLOW "  - Lokasi Asal  : huruf lokasi awal\n" RESET;
+    cout << YELLOW "  - Lokasi Tujuan: huruf lokasi akhir\n" RESET;
+    cout << YELLOW "  - Bobot Jarak  : angka jarak/berat\n\n" RESET;
 
     auto readLocationIndex = [&](const string& prompt) {
         while (true) {
-            cout << prompt;
+            cout << CYAN << prompt << RESET;
             string token;
             cin >> token;
 
@@ -640,13 +656,13 @@ int main() {
                 }
             }
 
-            cout << "Lokasi harus berupa huruf A sampai " << char('A' + V - 1) << ".\n";
+            cout << BOLD_RED "Lokasi harus berupa huruf A sampai " << char('A' + V - 1) << ".\n" RESET;
         }
     };
 
     auto readWeight = [&]() {
         while (true) {
-            cout << "Bobot Jarak: ";
+            cout << CYAN "Bobot Jarak: " RESET;
             string token;
             cin >> token;
 
@@ -659,12 +675,12 @@ int main() {
                 return weight;
             }
 
-            cout << "Bobot jarak harus angka non-negatif.\n";
+            cout << BOLD_RED "Bobot jarak harus angka non-negatif.\n" RESET;
         }
     };
 
     for (int i = 0; i < E; i++) {
-        cout << "Masukkan ruas jalan ke-" << i + 1 << " (contoh: A B 8):\n";
+        cout << "\n" BOLD_WHITE "Masukkan data ruas jalan ke-" << i + 1 << ":\n" RESET;
         int u = readLocationIndex("Lokasi Asal: ");
         int v = readLocationIndex("Lokasi Tujuan: ");
         int w = readWeight();
@@ -672,28 +688,28 @@ int main() {
         graph[u].push_back({v, w});
         graph[v].push_back({u, w});
 
-        cout << "";
+        cout << GREEN "Ruas jalan berhasil ditambahkan!\n" RESET;
     }
 
     char sourceChar;
-    cout << "\nMasukkan lokasi awal pengiriman (huruf): ";
+    cout << "\n" CYAN "Masukkan lokasi awal pengiriman (huruf): " RESET;
     cin >> sourceChar;
     sourceChar = static_cast<char>(toupper(static_cast<unsigned char>(sourceChar)));
 
     int source = sourceChar - 'A';
     if (source < 0 || source >= V) {
-        cout << "Lokasi awal tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+        cout << BOLD_RED "Lokasi awal tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n" RESET;
         return 1;
     }
 
     char targetChar;
-    cout << "Masukkan lokasi tujuan pengiriman paket (huruf): ";
+    cout << CYAN "Masukkan lokasi tujuan pengiriman paket (huruf): " RESET;
     cin >> targetChar;
     targetChar = static_cast<char>(toupper(static_cast<unsigned char>(targetChar)));
 
     int target = targetChar - 'A';
     if (target < 0 || target >= V) {
-        cout << "Lokasi tujuan tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n";
+        cout << BOLD_RED "Lokasi tujuan tidak valid. Gunakan huruf antara A dan " << char('A' + V - 1) << ".\n" RESET;
         return 1;
     }
 
@@ -737,18 +753,25 @@ int main() {
     }
 
     // Output ke console
-    cout << "\nRute optimal pengiriman paket dari " << char(source + 'A') 
-         << " ke " << char(target + 'A') << ":\n";
+    cout << "\n" BOLD_CYAN "=======================================\n" RESET;
+    cout << BOLD_GREEN "HASIL PERHITUNGAN RUTE TERPENDEK\n" RESET;
+    cout << BOLD_CYAN "=======================================\n\n" RESET;
+    
+    cout << BOLD_WHITE "Rute optimal pengiriman paket dari " RESET 
+         << BOLD_GREEN << char(source + 'A') << RESET 
+         << BOLD_WHITE " ke " RESET 
+         << BOLD_YELLOW << char(target + 'A') << RESET << ":\n";
+    
     if (dist[target] == INT_MAX) {
-        cout << "Tidak ada rute pengiriman paket yang terjangkau.\n";
+        cout << BOLD_RED "❌ Tidak ada rute pengiriman paket yang terjangkau.\n" RESET;
     } else {
-        cout << "Jarak: " << dist[target] << "\n";
-        cout << "Rute: ";
+        cout << GREEN " Jarak: " << BOLD_GREEN << dist[target] << " Km\n" RESET;
+        cout << GREEN " Rute: " BOLD_YELLOW;
         for (size_t i = 0; i < deliveryPath.size(); ++i) {
             cout << char(deliveryPath[i] + 'A');
-            if (i + 1 < deliveryPath.size()) cout << "->";
+            if (i + 1 < deliveryPath.size()) cout << YELLOW " -> " RESET BOLD_YELLOW;
         }
-        cout << "\n";
+        cout << RESET << "\n";
     }
 
     // Simpan ke file hasil.txt
@@ -759,20 +782,20 @@ int main() {
     string outFile = string("output\\") + "hasil.txt";
     ofstream outputFile(outFile);
 
-    cout << "\n=======================================\n";
-    cout << "HASIL RUTE TERPENDEK\n";
-    cout << "=======================================\n\n";
+    cout << "\n" BOLD_CYAN "=======================================\n" RESET;
+    cout << BOLD_WHITE "DETAIL RUTE KE SEMUA LOKASI\n" RESET;
+    cout << BOLD_CYAN "=======================================\n\n" RESET;
 
     outputFile << "HASIL RUTE TERPENDEK\n\n";
-    cout << "Lokasi | Jarak Terpendek | Rute\n";
-    cout << "--------------------------------" << string(20, '-') << "\n";
+    cout << BOLD_BLUE "Lokasi | Jarak Terpendek | Rute\n" RESET;
+    cout << CYAN "--------------------------------" << string(20, '-') << RESET "\n";
 
     for (int i = 0; i < V; i++) {
-        cout << char(i + 'A') << "    | ";
+        cout << GREEN << char(i + 'A') << RESET << "    | ";
         if (dist[i] == INT_MAX) {
-            cout << "INF          | Tidak terjangkau\n";
+            cout << RED "INF" RESET "          | " RED "Tidak terjangkau\n" RESET;
         } else {
-            cout << dist[i] << "            | ";
+            cout << YELLOW << dist[i] << RESET << "            | ";
             vector<int> path;
             int temp = i;
             while (temp != -1) {
@@ -782,12 +805,12 @@ int main() {
             reverse(path.begin(), path.end());
 
             for (size_t k = 0; k < path.size(); ++k) {
-                cout << char(path[k] + 'A');
-                if (k + 1 < path.size()) cout << "->";
+                cout << BOLD_GREEN << char(path[k] + 'A') << RESET;
+                if (k + 1 < path.size()) cout << " -> ";
             }
             cout << "\n";
         }
-        cout << "--------------------------------\n";
+        cout << CYAN "--------------------------------" RESET "\n";
 
         // Tulis ke file
         outputFile << "Tujuan Lokasi " << char(i + 'A') << endl;
@@ -816,7 +839,8 @@ int main() {
 
     // Generate visualisasi dan buka otomatis
     writeVisualization(graph, V, source, target, dist, parent);
-    cout << "\nHasil perhitungan juga telah disimpan ke file hasil.txt\n";
+    cout << "\n" BOLD_GREEN " Visualisasi HTML berhasil dibuat dan dibuka di browser!\n" RESET;
+    cout << BOLD_CYAN " Hasil perhitungan juga telah disimpan ke file " YELLOW "output\\hasil.txt" CYAN "\n" RESET;
 
     return 0;
 }
