@@ -1,42 +1,42 @@
 HASIL RUTE TERPENDEK
 
 Tujuan Lokasi A
-Jarak Terpendek : 4
-Rute            : C A 
+Jarak Terpendek : 6
+Rute            : B A 
 --------------------------------
 Tujuan Lokasi B
-Jarak Terpendek : 10
-Rute            : C B 
+Jarak Terpendek : 0
+Rute            : B 
 --------------------------------
 Tujuan Lokasi C
-Jarak Terpendek : 0
-Rute            : C 
+Jarak Terpendek : 10
+Rute            : B C 
 --------------------------------
 Tujuan Lokasi D
-Jarak Terpendek : 4
-Rute            : C D 
+Jarak Terpendek : 8
+Rute            : B D 
 --------------------------------
 Tujuan Lokasi E
-Jarak Terpendek : 10
-Rute            : C D E 
+Jarak Terpendek : 16
+Rute            : B D E 
 --------------------------------
 Tujuan Lokasi F
-Jarak Terpendek : 10
-Rute            : C F 
+Jarak Terpendek : 20
+Rute            : B D F 
 --------------------------------
 Tujuan Lokasi G
-Jarak Terpendek : 18
-Rute            : C D G 
+Jarak Terpendek : 23
+Rute            : B D F G 
 --------------------------------
 Tujuan Lokasi H
-Jarak Terpendek : 21
-Rute            : C D G H 
+Jarak Terpendek : 27
+Rute            : B D F G H 
 --------------------------------
 Tujuan Lokasi I
-Jarak Terpendek : 29
-Rute            : C D G H I 
+Jarak Terpendek : 31
+Rute            : B D F G I 
 --------------------------------
 Tujuan Lokasi J
-Jarak Terpendek : 39
-Rute            : C D G H I J 
+Jarak Terpendek : 42
+Rute            : B D F G H J 
 --------------------------------
