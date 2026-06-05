@@ -1,14 +1,24 @@
-#include <iostream>
-#include <vector>
-#include <queue>
-#include <climits>
-#include <fstream>
-#include <algorithm>
-#include <sstream>
-#include <cstdlib>
-#include <cmath>
-#include <set>
-#include <cctype>
+// Kelompok 8 - Struktur Data dan Algoritma
+// Implementasi Shortest Path untuk Optimasi Pengiriman Paket antar Wilayah
+// Algoritma Dijkstra
+// 1. Sina Mahdi Sitanggang - 251402008
+// 2. Muhammad Ihsan Anwar - 251402044
+// 3. Muhammad Azkha Amorie - 251402092
+// 4. Fadila Lisma Sari - 251402117
+// 5. Qairsya Naurel Ein Yaliki - 251402120
+// 6. Syifa Nazira - 251402126
+
+#include <iostream>     // Input dan output standar (cin, cout)
+#include <vector>       // Struktur data array dinamis (vector)
+#include <queue>        // Struktur data queue dan priority_queue
+#include <climits>      // Konstanta batas nilai integer (INT_MAX, INT_MIN)
+#include <fstream>      // Membaca dan menulis file
+#include <algorithm>    // Fungsi algoritma seperti sort(), find(), reverse()
+#include <sstream>      // Manipulasi string sebagai stream
+#include <cstdlib>      // Fungsi utilitas umum seperti system(), rand(), exit()
+#include <cmath>        // Fungsi matematika seperti sqrt(), pow(), abs()
+#include <set>          // Struktur data set (data unik dan terurut)
+#include <cctype>       // Fungsi pengecekan karakter seperti isdigit(), isalpha()
 
 using namespace std;
 
